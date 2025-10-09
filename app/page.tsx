@@ -10,11 +10,11 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-            <span className="block">Éditeur d'Images</span>
-            <span className="block text-blue-600">Alimenté par l'IA</span>
+            <span className="block">Éditeur d&apos;Images</span>
+            <span className="block text-blue-600">Alimenté par l&apos;IA</span>
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Transformez vos images avec la puissance de l'intelligence artificielle. 
+            Transformez vos images avec la puissance de l&apos;intelligence artificielle. 
             Créez, modifiez et améliorez vos photos avec des prompts simples.
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
@@ -60,7 +60,7 @@ export default function Home() {
               </div>
               <h3 className="mt-4 text-lg font-medium text-gray-900">Rapide et Efficace</h3>
               <p className="mt-2 text-base text-gray-500">
-                Résultats en quelques secondes grâce à l'IA avancée
+                Résultats en quelques secondes grâce à l&apos;IA avancée
               </p>
             </div>
             
@@ -86,7 +86,7 @@ export default function Home() {
                 Prêt à transformer vos images ?
               </h2>
               <p className="mt-4 text-lg text-gray-600">
-                Rejoignez des milliers d'utilisateurs qui créent des images extraordinaires
+                Rejoignez des milliers d&apos;utilisateurs qui créent des images extraordinaires
               </p>
               <div className="mt-8">
                 <Link

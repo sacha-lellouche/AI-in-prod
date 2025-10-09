@@ -139,11 +139,11 @@ export default function DashboardPage() {
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
             <span className="block">Votre Studio</span>
-            <span className="block text-blue-600">d'Édition IA</span>
+            <span className="block text-blue-600">d&apos;Édition IA</span>
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Transformez vos images avec la puissance de l'intelligence artificielle. 
-            Ajoutez une URL d'image et décrivez les modifications souhaitées.
+            Transformez vos images avec la puissance de l&apos;intelligence artificielle. 
+            Ajoutez une URL d&apos;image et décrivez les modifications souhaitées.
           </p>
         </div>
 
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                       Génération en cours...
                     </>
                   ) : (
-                    '✨ Générer l\'image'
+                    '✨ Générer l&apos;image'
                   )}
                 </button>
               </form>

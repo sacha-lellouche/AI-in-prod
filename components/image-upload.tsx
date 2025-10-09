@@ -74,11 +74,11 @@ export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageU
         onImageUploaded(url)
       } else {
         const error = await response.json()
-        alert(`Erreur d'upload: ${error.error}`)
+        alert(`Erreur d&apos;upload: ${error.error}`)
       }
     } catch (error) {
       console.error('Erreur upload:', error)
-      alert('Erreur lors de l\'upload de l\'image')
+      alert('Erreur lors de l&apos;upload de l&apos;image')
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
@@ -165,7 +165,7 @@ export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageU
       {/* Champ URL comme fallback */}
       <div>
         <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-          URL d'une image en ligne
+          URL d&apos;une image en ligne
         </label>
         <input
           id="imageUrl"

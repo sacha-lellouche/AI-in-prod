@@ -72,7 +72,7 @@ export default function AuthForm({ mode = 'signin', onSuccess }: AuthFormProps) 
         }
       }
     } catch (err) {
-      setError('Une erreur inattendue s\'est produite')
+      setError('Une erreur inattendue s&apos;est produite')
     } finally {
       setLoading(false)
     }
@@ -100,7 +100,7 @@ export default function AuthForm({ mode = 'signin', onSuccess }: AuthFormProps) 
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          S'inscrire
+          S&apos;inscrire
         </button>
       </div>
 
