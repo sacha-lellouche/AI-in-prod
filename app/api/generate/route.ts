@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createServerComponentClient, supabaseAdmin } from '@/lib/supabase-server'
 import Replicate from 'replicate'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -8,7 +8,20 @@ const replicate = new Replicate({
 })
 
 export async function POST(request: NextRequest) {
+  let projectId: string | null = null
+  
   try {
+    // Vérifier l'authentification
+    const supabase = await createServerComponentClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentification requise' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const { imageUrl, prompt } = body
 
@@ -19,12 +32,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer un nouveau projet dans la base de données avec l'URL de l'image
-    const projectId = uuidv4()
+    // Valider que l'URL est une vraie URL d'image
+    try {
+      const url = new URL(imageUrl)
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+      const hasValidExtension = validExtensions.some(ext => 
+        url.pathname.toLowerCase().includes(ext)
+      )
+      
+      if (!hasValidExtension && !url.hostname.includes('unsplash.com') && !url.hostname.includes('images.')) {
+        return NextResponse.json(
+          { error: 'URL d\'image invalide. Utilisez une URL qui pointe directement vers un fichier image (.jpg, .png, etc.)' },
+          { status: 400 }
+        )
+      }
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'URL invalide. Vérifiez le format de l\'URL.' },
+        { status: 400 }
+      )
+    }
+
+    // Créer un nouveau projet dans la base de données avec l'URL de l'image et l'user_id
+    projectId = uuidv4()
     const { error: insertError } = await supabaseAdmin
       .from('projects')
       .insert({
         id: projectId,
+        user_id: user.id, // Ajouter l'ID de l'utilisateur
         input_image_url: imageUrl,
         prompt,
         status: 'processing'
@@ -38,24 +73,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Appeler Replicate pour générer l'image
+    // Appeler Replicate pour modifier l'image avec google/nano-banana
+    console.log('Calling Replicate with:', {
+      model: process.env.REPLICATE_MODEL,
+      prompt,
+      imageUrl
+    })
+    
     const output = await replicate.run(
       process.env.REPLICATE_MODEL as `${string}/${string}`,
       {
         input: {
-          image_input: [imageUrl], // Le modèle attend un tableau d'images
           prompt: prompt,
-          output_format: "png"
+          image_input: [imageUrl],
+          output_format: "png",
+          aspect_ratio: "1:1"
         }
       }
-    ) as unknown as string // Le modèle retourne directement une URL (string), pas un tableau
+    ) as unknown as string
+
+    console.log('Replicate output:', output)
 
     if (!output) {
       throw new Error('Aucune image générée par Replicate')
     }
 
-    // Télécharger l'image générée
-    const generatedImageUrl = output // output est déjà l'URL directe
+    const generatedImageUrl = output
     const imageResponse = await fetch(generatedImageUrl)
     
     if (!imageResponse.ok) {
@@ -105,8 +148,22 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erreur API generate:', error)
+    
+    // Mettre à jour le statut du projet en cas d'erreur (si le projet a été créé)
+    if (projectId) {
+      await supabaseAdmin
+        .from('projects')
+        .update({ status: 'failed' })
+        .eq('id', projectId)
+    }
+    
+    let errorMessage = 'Erreur interne du serveur'
+    if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erreur interne du serveur' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
