@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient, supabaseAdmin } from '@/lib/supabase-server'
+import { createServerComponentClient, getSupabaseAdmin } from '@/lib/supabase-server'
 import Replicate from 'replicate'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -8,6 +8,7 @@ const replicate = new Replicate({
 })
 
 export async function POST(request: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin()
   let projectId: string | null = null
   
   try {

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient, supabaseAdmin } from '@/lib/supabase-server'
+import { createServerComponentClient, getSupabaseAdmin } from '@/lib/supabase-server'
 
 export async function DELETE(request: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   try {
     // Vérifier l'authentification
     const supabase = await createServerComponentClient()

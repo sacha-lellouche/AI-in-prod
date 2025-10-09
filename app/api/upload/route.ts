@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient, supabaseAdmin } from '@/lib/supabase-server'
+import { createServerComponentClient, getSupabaseAdmin } from '@/lib/supabase-server'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   try {
     // Vérifier l'authentification
     const supabase = await createServerComponentClient()
