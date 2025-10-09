@@ -71,7 +71,7 @@ export default function AuthForm({ mode = 'signin', onSuccess }: AuthFormProps) 
           router.push('/dashboard')
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Une erreur inattendue s&apos;est produite')
     } finally {
       setLoading(false)

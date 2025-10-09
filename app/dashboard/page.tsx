@@ -2,10 +2,11 @@
 
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
 import Header from '@/components/header'
 import ImageUpload from '@/components/image-upload'
+import Image from 'next/image'
 
 interface Project {
   id: string
@@ -32,13 +33,7 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (user) {
-      fetchProjects()
-    }
-  }, [user])
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -56,7 +51,13 @@ export default function DashboardPage() {
     } finally {
       setLoadingProjects(false)
     }
-  }
+  }, [supabase, user?.id])
+
+  useEffect(() => {
+    if (user) {
+      fetchProjects()
+    }
+  }, [user, fetchProjects])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,7 +77,7 @@ export default function DashboardPage() {
       })
 
       if (response.ok) {
-        const result = await response.json()
+        await response.json()
         setImageUrl('')
         setPrompt('')
         fetchProjects() // Recharger les projets
@@ -87,7 +88,7 @@ export default function DashboardPage() {
         let error
         try {
           error = await response.json()
-        } catch (e) {
+        } catch (_e) {
           error = { error: `Erreur HTTP ${response.status}: ${response.statusText}` }
         }
         
@@ -230,11 +231,15 @@ export default function DashboardPage() {
                   <div key={project.id} className="bg-gray-50 rounded-lg p-6 hover:shadow-md transition duration-200">
                     <div className="aspect-w-16 aspect-h-9 mb-4">
                       {project.input_image_url && (
-                        <img
-                          src={project.input_image_url}
-                          alt="Image source"
-                          className="w-full h-48 object-cover rounded-md"
-                        />
+                        <div className="relative w-full h-48">
+                          <Image
+                            src={project.input_image_url}
+                            alt="Image source"
+                            fill
+                            className="object-cover rounded-md"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
                       )}
                     </div>
                     
@@ -262,11 +267,15 @@ export default function DashboardPage() {
                     {project.output_image_url && (
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 mb-2">🎨 Résultat:</p>
-                        <img
-                          src={project.output_image_url}
-                          alt="Image générée"
-                          className="w-full h-48 object-cover rounded-md"
-                        />
+                        <div className="relative w-full h-48">
+                          <Image
+                            src={project.output_image_url}
+                            alt="Image générée"
+                            fill
+                            className="object-cover rounded-md"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
                       </div>
                     )}
                     

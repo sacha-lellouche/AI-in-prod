@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
 
     // Upload vers Supabase Storage
-    const { data, error: uploadError } = await supabaseAdmin.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from(process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET || 'input-images')
       .upload(fileName, arrayBuffer, {
         contentType: file.type || 'image/jpeg',

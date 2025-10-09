@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void
@@ -10,7 +11,6 @@ interface ImageUploadProps {
 export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -58,7 +58,6 @@ export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageU
 
   const uploadImage = async (file: File) => {
     setIsUploading(true)
-    setUploadProgress(0)
 
     try {
       const formData = new FormData()
@@ -81,7 +80,6 @@ export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageU
       alert('Erreur lors de l&apos;upload de l&apos;image')
     } finally {
       setIsUploading(false)
-      setUploadProgress(0)
     }
   }
 
@@ -147,11 +145,15 @@ export default function ImageUpload({ onImageUploaded, currentImageUrl }: ImageU
       {currentImageUrl && !isUploading && (
         <div className="border rounded-lg p-4 bg-gray-50">
           <p className="text-sm font-medium text-gray-700 mb-2">Image sélectionnée :</p>
-          <img
-            src={currentImageUrl}
-            alt="Image sélectionnée"
-            className="w-full h-48 object-cover rounded-md"
-          />
+          <div className="relative w-full h-48">
+            <Image
+              src={currentImageUrl}
+              alt="Image sélectionnée"
+              fill
+              className="object-cover rounded-md"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
         </div>
       )}
 
