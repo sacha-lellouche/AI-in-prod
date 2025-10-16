@@ -191,7 +191,7 @@ export default function DashboardPage() {
                       Génération en cours...
                     </>
                   ) : (
-                    '✨ Générer l&apos;image'
+                    <>✨ Générer l&apos;image</>
                   )}
                 </button>
               </form>

@@ -101,24 +101,39 @@ export async function POST(request: NextRequest) {
     )
 
     console.log('Replicate output type:', typeof output)
-    console.log('Replicate output:', output)
+    console.log('Replicate output:', JSON.stringify(output, null, 2))
 
     // Gérer différents types de retour de Replicate
-    let generatedImageUrl: string
+    let generatedImageUrl: string | undefined
     
     if (typeof output === 'string') {
       generatedImageUrl = output
-    } else if (Array.isArray(output) && output.length > 0) {
-      generatedImageUrl = output[0]
-    } else if (output && typeof output === 'object' && 'url' in output) {
-      generatedImageUrl = (output as { url: string }).url
-    } else {
-      console.error('Format de sortie Replicate inattendu:', output)
-      throw new Error('Format de réponse Replicate invalide')
+      console.log('Output is string:', generatedImageUrl)
+    } else if (Array.isArray(output)) {
+      console.log('Output is array, length:', output.length)
+      if (output.length > 0) {
+        generatedImageUrl = output[0]
+        console.log('First element:', generatedImageUrl)
+      }
+    } else if (output && typeof output === 'object') {
+      console.log('Output is object, keys:', Object.keys(output))
+      if ('url' in output) {
+        generatedImageUrl = (output as { url: string }).url
+      } else if ('output' in output) {
+        const nestedOutput = (output as { output: unknown }).output
+        if (typeof nestedOutput === 'string') {
+          generatedImageUrl = nestedOutput
+        } else if (Array.isArray(nestedOutput) && nestedOutput.length > 0) {
+          generatedImageUrl = nestedOutput[0]
+        }
+      }
     }
 
     if (!generatedImageUrl || typeof generatedImageUrl !== 'string') {
-      throw new Error('Aucune URL d\'image valide générée par Replicate')
+      console.error('Failed to extract image URL from Replicate response')
+      console.error('Output type:', typeof output)
+      console.error('Output value:', output)
+      throw new Error(`Aucune URL d'image valide générée par Replicate. Format reçu: ${typeof output}`)
     }
 
     console.log('Generated image URL:', generatedImageUrl)
