@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { GENERATION_PRICE_EUR } from '@/lib/stripe'
+
+// Prix par génération (copié ici pour éviter l'import depuis lib/stripe qui est côté serveur)
+const GENERATION_PRICE_EUR = 2.00
 
 interface PaymentButtonProps {
   imageUrl: string
