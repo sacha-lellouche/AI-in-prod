@@ -117,14 +117,37 @@ export async function POST(request: NextRequest) {
       }
     } else if (output && typeof output === 'object') {
       console.log('Output is object, keys:', Object.keys(output))
-      if ('url' in output) {
-        generatedImageUrl = (output as { url: string }).url
-      } else if ('output' in output) {
-        const nestedOutput = (output as { output: unknown }).output
-        if (typeof nestedOutput === 'string') {
-          generatedImageUrl = nestedOutput
-        } else if (Array.isArray(nestedOutput) && nestedOutput.length > 0) {
-          generatedImageUrl = nestedOutput[0]
+      
+      // Essayer différentes propriétés possibles
+      const possibleKeys = ['url', 'output', 'image', 'images', 'result', 'data', '0']
+      
+      for (const key of possibleKeys) {
+        if (key in output) {
+          console.log(`Found key "${key}" in output`)
+          const value = (output as Record<string, unknown>)[key]
+          
+          if (typeof value === 'string') {
+            generatedImageUrl = value
+            console.log(`Extracted URL from ${key}:`, generatedImageUrl)
+            break
+          } else if (Array.isArray(value) && value.length > 0) {
+            generatedImageUrl = value[0]
+            console.log(`Extracted URL from ${key}[0]:`, generatedImageUrl)
+            break
+          }
+        }
+      }
+      
+      // Si toujours pas trouvé, essayer de prendre la première valeur string
+      if (!generatedImageUrl) {
+        console.log('Trying to find first string value in object...')
+        const values = Object.values(output)
+        for (const value of values) {
+          if (typeof value === 'string' && value.startsWith('http')) {
+            generatedImageUrl = value
+            console.log('Found URL in object values:', generatedImageUrl)
+            break
+          }
         }
       }
     }
@@ -132,8 +155,9 @@ export async function POST(request: NextRequest) {
     if (!generatedImageUrl || typeof generatedImageUrl !== 'string') {
       console.error('Failed to extract image URL from Replicate response')
       console.error('Output type:', typeof output)
-      console.error('Output value:', output)
-      throw new Error(`Aucune URL d'image valide générée par Replicate. Format reçu: ${typeof output}`)
+      console.error('Output value:', JSON.stringify(output, null, 2))
+      console.error('Available keys:', output && typeof output === 'object' ? Object.keys(output) : 'N/A')
+      throw new Error(`Aucune URL d'image valide générée par Replicate. Format reçu: ${typeof output}. Keys: ${output && typeof output === 'object' ? Object.keys(output).join(', ') : 'none'}`)
     }
 
     console.log('Generated image URL:', generatedImageUrl)
