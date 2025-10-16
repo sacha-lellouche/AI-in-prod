@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {        console.error('Erreur lors de l\'extraction du nom de fichier output:', error)
-      }
-    }
-
-    // Supprimer l'image d'input si elle provient de notre bucket
-    if (project.input_image_url) {
-      try {
-        const url = new URL(project.input_image_url)erComponentClient, getSupabaseAdmin } from '@/lib/supabase-server'
+import { createServerComponentClient, getSupabaseAdmin } from '@/lib/supabase-server'
 
 export async function DELETE(request: NextRequest) {
   const supabaseAdmin = getSupabaseAdmin()
@@ -48,10 +41,12 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Définir les buckets
+    const inputBucket = process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET?.trim() || 'input-images'
+    const outputBucket = process.env.NEXT_PUBLIC_SUPABASE_OUTPUT_BUCKET?.trim() || 'output-images'
+    
     // Supprimer les images des buckets si elles existent
     const deletePromises = []
-    const outputBucket = process.env.NEXT_PUBLIC_SUPABASE_OUTPUT_BUCKET || process.env.SUPABASE_OUTPUT_BUCKET || 'output-images'
-    const inputBucket = process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET || process.env.SUPABASE_INPUT_BUCKET || 'input-images'
 
     // Supprimer l'image d'output si elle existe
     if (project.output_image_url) {
@@ -74,9 +69,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Supprimer l'image d'input si elle provient de notre bucket
-    const inputBucket = process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET || process.env.SUPABASE_INPUT_BUCKET || 'input-images'
-    const outputBucket = process.env.NEXT_PUBLIC_SUPABASE_OUTPUT_BUCKET || process.env.SUPABASE_OUTPUT_BUCKET || 'output-images'
-    
     if (project.input_image_url) {
       try {
         const url = new URL(project.input_image_url)
