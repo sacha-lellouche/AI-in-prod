@@ -182,9 +182,16 @@ export async function POST(request: NextRequest) {
     const imageBuffer = await imageResponse.arrayBuffer()
 
     // Upload de l'image générée dans Supabase Storage
+    const outputBucket = process.env.NEXT_PUBLIC_SUPABASE_OUTPUT_BUCKET?.trim() || 
+                        process.env.SUPABASE_OUTPUT_BUCKET?.trim() || 
+                        'output-images'
     const outputFileName = `${projectId}-output-${Date.now()}.png`
+    
+    console.log('Uploading to bucket:', outputBucket)
+    console.log('Output file name:', outputFileName)
+    
     const { error: outputUploadError } = await supabaseAdmin.storage
-      .from(process.env.SUPABASE_OUTPUT_BUCKET!)
+      .from(outputBucket)
       .upload(outputFileName, imageBuffer, {
         contentType: 'image/png',
       })
@@ -196,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     // Récupérer l'URL publique de l'image générée
     const { data: { publicUrl: outputImageUrl } } = supabaseAdmin.storage
-      .from(process.env.SUPABASE_OUTPUT_BUCKET!)
+      .from(outputBucket)
       .getPublicUrl(outputFileName)
 
     // Mettre à jour le projet avec l'URL de l'image générée et le statut

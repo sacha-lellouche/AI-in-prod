@@ -55,8 +55,9 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
 
     // Upload vers Supabase Storage
+    const inputBucket = process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET?.trim() || 'input-images'
     const { error: uploadError } = await supabaseAdmin.storage
-      .from(process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET || 'input-images')
+      .from(inputBucket)
       .upload(fileName, arrayBuffer, {
         contentType: file.type || 'image/jpeg',
         upsert: false
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Récupérer l'URL publique
     const { data: { publicUrl } } = supabaseAdmin.storage
-      .from(process.env.NEXT_PUBLIC_SUPABASE_INPUT_BUCKET || 'input-images')
+      .from(inputBucket)
       .getPublicUrl(fileName)
 
     return NextResponse.json({
