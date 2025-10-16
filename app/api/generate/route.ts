@@ -26,14 +26,51 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { imageUrl, prompt } = body
+    const { projectId: existingProjectId } = body
 
-    if (!imageUrl || !prompt) {
+    if (!existingProjectId) {
       return NextResponse.json(
-        { error: 'URL image et prompt requis' },
+        { error: 'ID du projet requis' },
         { status: 400 }
       )
     }
+
+    projectId = existingProjectId
+
+    // Récupérer le projet et vérifier qu'il appartient à l'utilisateur
+    const { data: project, error: fetchError } = await supabaseAdmin
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (fetchError || !project) {
+      return NextResponse.json(
+        { error: 'Projet non trouvé ou non autorisé' },
+        { status: 404 }
+      )
+    }
+
+    // ✅ VÉRIFICATION CRITIQUE: Le paiement doit être complété
+    if (project.payment_status !== 'paid') {
+      console.error('⚠️ Tentative de génération sans paiement:', projectId, '- Status:', project.payment_status)
+      return NextResponse.json(
+        { error: 'Le paiement doit être complété avant de générer l\'image' },
+        { status: 403 }
+      )
+    }
+
+    // Vérifier que l'image n'a pas déjà été générée
+    if (project.status === 'completed' && project.output_image_url) {
+      return NextResponse.json(
+        { error: 'Cette image a déjà été générée' },
+        { status: 400 }
+      )
+    }
+
+    const imageUrl = project.input_image_url
+    const prompt = project.prompt
 
     // Valider que l'URL est une vraie URL d'image
     try {
@@ -61,25 +98,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer un nouveau projet dans la base de données avec l'URL de l'image et l'user_id
-    projectId = uuidv4()
-    const { error: insertError } = await supabaseAdmin
+    // Mettre à jour le statut à 'processing'
+    await supabaseAdmin
       .from('projects')
-      .insert({
-        id: projectId,
-        user_id: user.id, // Ajouter l'ID de l'utilisateur
-        input_image_url: imageUrl,
-        prompt,
-        status: 'processing'
-      })
-
-    if (insertError) {
-      console.error('Erreur insertion projet:', insertError)
-      return NextResponse.json(
-        { error: 'Erreur lors de la création du projet' },
-        { status: 500 }
-      )
-    }
+      .update({ status: 'processing' })
+      .eq('id', projectId)
 
     // Appeler Replicate pour modifier l'image avec google/nano-banana
     console.log('Calling Replicate with:', {
