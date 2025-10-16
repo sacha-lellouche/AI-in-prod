@@ -88,17 +88,28 @@ export async function POST(request: NextRequest) {
       imageUrl
     })
     
-    const output = await replicate.run(
-      REPLICATE_MODEL as `${string}/${string}`,
-      {
-        input: {
-          prompt: prompt,
-          image_input: [imageUrl],
-          output_format: "png",
-          aspect_ratio: "1:1"
-        }
+    // Utiliser l'API asynchrone de Replicate avec wait()
+    console.log('Creating prediction...')
+    const prediction = await replicate.predictions.create({
+      model: REPLICATE_MODEL as `${string}/${string}`,
+      input: {
+        prompt: prompt,
+        image_input: [imageUrl],
+        output_format: "png",
+        aspect_ratio: "1:1"
       }
-    )
+    })
+
+    console.log('Prediction created:', prediction.id, 'Status:', prediction.status)
+    
+    // Attendre que la prédiction soit terminée
+    console.log('Waiting for prediction to complete...')
+    const completedPrediction = await replicate.wait(prediction, {
+      interval: 1000, // Vérifier toutes les secondes
+    })
+
+    console.log('Prediction completed:', completedPrediction.status)
+    const output = completedPrediction.output
 
     console.log('Replicate output type:', typeof output)
     console.log('Replicate output:', JSON.stringify(output, null, 2))
