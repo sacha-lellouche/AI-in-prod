@@ -7,6 +7,8 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN!,
 })
 
+const REPLICATE_MODEL = process.env.REPLICATE_MODEL || 'google/nano-banana'
+
 export async function POST(request: NextRequest) {
   const supabaseAdmin = getSupabaseAdmin()
   let projectId: string | null = null
@@ -41,7 +43,12 @@ export async function POST(request: NextRequest) {
         url.pathname.toLowerCase().includes(ext)
       )
       
-      if (!hasValidExtension && !url.hostname.includes('unsplash.com') && !url.hostname.includes('images.')) {
+      // Accepter les URLs de Supabase Storage (gmymedqrfxbjlgohuqoo.supabase.co)
+      const isSupabaseStorage = url.hostname.includes('supabase.co')
+      const isUnsplash = url.hostname.includes('unsplash.com')
+      const isImageHost = url.hostname.includes('images.')
+      
+      if (!hasValidExtension && !isSupabaseStorage && !isUnsplash && !isImageHost) {
         return NextResponse.json(
           { error: 'URL d\'image invalide. Utilisez une URL qui pointe directement vers un fichier image (.jpg, .png, etc.)' },
           { status: 400 }
@@ -76,13 +83,13 @@ export async function POST(request: NextRequest) {
 
     // Appeler Replicate pour modifier l'image avec google/nano-banana
     console.log('Calling Replicate with:', {
-      model: process.env.REPLICATE_MODEL,
+      model: REPLICATE_MODEL,
       prompt,
       imageUrl
     })
     
     const output = await replicate.run(
-      process.env.REPLICATE_MODEL as `${string}/${string}`,
+      REPLICATE_MODEL as `${string}/${string}`,
       {
         input: {
           prompt: prompt,
@@ -91,15 +98,31 @@ export async function POST(request: NextRequest) {
           aspect_ratio: "1:1"
         }
       }
-    ) as unknown as string
+    )
 
+    console.log('Replicate output type:', typeof output)
     console.log('Replicate output:', output)
 
-    if (!output) {
-      throw new Error('Aucune image générée par Replicate')
+    // Gérer différents types de retour de Replicate
+    let generatedImageUrl: string
+    
+    if (typeof output === 'string') {
+      generatedImageUrl = output
+    } else if (Array.isArray(output) && output.length > 0) {
+      generatedImageUrl = output[0]
+    } else if (output && typeof output === 'object' && 'url' in output) {
+      generatedImageUrl = (output as { url: string }).url
+    } else {
+      console.error('Format de sortie Replicate inattendu:', output)
+      throw new Error('Format de réponse Replicate invalide')
     }
 
-    const generatedImageUrl = output
+    if (!generatedImageUrl || typeof generatedImageUrl !== 'string') {
+      throw new Error('Aucune URL d\'image valide générée par Replicate')
+    }
+
+    console.log('Generated image URL:', generatedImageUrl)
+    
     const imageResponse = await fetch(generatedImageUrl)
     
     if (!imageResponse.ok) {
